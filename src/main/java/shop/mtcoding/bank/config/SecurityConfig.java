@@ -12,6 +12,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import shop.mtcoding.bank.domain.user.UserEnum;
+import shop.mtcoding.bank.util.CustomResponseUtil;
 
 @Configuration
 public class SecurityConfig {
@@ -29,6 +30,8 @@ public class SecurityConfig {
     // JWT -> Session 사용x
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        log.debug("디버그: filterChain 빈 등록됨");
+
         http.headers().frameOptions().disable();    // iframe 허용안함
         http.csrf().disable();  // 허용시 포스트맨 작동안함.
         http.cors().configurationSource(configurationSource());
@@ -39,6 +42,13 @@ public class SecurityConfig {
         // httpBasic은 브라우저가 팝업창을 이용해서 사용자인증을 진행.
         http.httpBasic().disable();
 
+        // Exception 가로채기
+        // 스프링시큐리티에서 예외가 발생하면 ExceptionTranslationFilter가 요청을 가로채서 응답을 한다.
+        // 따라서 제어권을 가져와서 우리가 일관성있게 응답을 할 수 있도록 해야 한다.
+        http.exceptionHandling().authenticationEntryPoint((request, response, authException) -> {
+            CustomResponseUtil.unAuthentication(response, "로그인을 진행해주세요");
+        });
+
         http.authorizeRequests()
                 .antMatchers("/api/s/**").authenticated()
                 .antMatchers("/api/admin/**").hasRole(UserEnum.ADMIN.toString())    // 최근 공식문서에서 "ROLE_" 안붙여도 됨.
@@ -48,6 +58,7 @@ public class SecurityConfig {
     }
 
     public CorsConfigurationSource configurationSource() {
+        log.debug("디버그: configurationSource cors 설정이 SecurityFilterChain에 등록됨");
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.addAllowedHeader("*");    // 모든 헤더 허용
         configuration.addAllowedMethod("*");    // GET, POST, PUT, DELETE
