@@ -104,3 +104,51 @@ void authentication_test() throws Exception {
 ```
 - MockMvc로 보낸 요청에 대한 응답을 `ResultActions` 객체로 받는다. 
 - ResultActions객체로부터 응답body의 내용과 HttpStatus코드를 받아와 예상값과 일치하는지 확인한다.  
+
+<br/>
+
+### UserService 테스트 코드
+- `@ExtendWith(MockitoExtension.class)`: Mock환경에서 테스트를 진행한다.
+- `@InjectMocks`: Mock을 주입할 객체를 지정한다.
+- `@Mock`: 가짜객체로 생성한다.
+- `@Spy`: 만약 가짜가 아닌 진짜 bean을 주입해야할일이 생길경우 사용한다.
+- `when`: 스텁이 할일을 지정하고 `thenReturn()`으로 결과물 또한 지정한다.
+
+```java
+public class DummyObject {
+
+    protected User newUser(String username, String fullname) {
+        BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+        String encPassword = passwordEncoder.encode("1234");
+        return User.builder()
+                .username(username)
+                .password(encPassword)
+                .email(username + "@nate.com")
+                .fullname(fullname)
+                .role(UserEnum.CUSTOMER)
+                .build();
+    }
+
+    protected User newMockUser(Long id, String username, String fullname) {
+        BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+        String encPassword = passwordEncoder.encode("1234");
+        return User.builder()
+                .id(id)
+                .username(username)
+                .password(encPassword)
+                .email(username + "@nate.com")
+                .fullname(fullname)
+                .role(UserEnum.CUSTOMER)
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .build();
+    }
+}
+```
+
+```java
+public class UserServiceTest extends DummyObject {
+    // ...
+}
+```
+테스트 클래스에서 상속해서 사용하면 번거롭게 Mock객체나 진짜 객체를 일일이 생성할 필요가 없어진다.
