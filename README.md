@@ -196,3 +196,23 @@ public class CustomValidationAdvice {
 - `@Around`, `@Before`, `@After`: 타겟의 전후, 타겟이 실행되기 전, 타겟이 실행된 후로 지정할 수 있다. 위에서 지정한 어노테이션이 실행된 시점을 기준으로 한다.
 - `ProceedingJoinPoint`: @Around인 경우에만 조인포인트를 가져올 수 있다.
 - `proceedingJoinPoint.getArgs()`: 조인포인트에서 받아온 매개변수를 배열형태로 가져온다. 가져온 배열에 BindingResult가 있을경우에 유효성검사로직을 실행시킬 수 있게 된다.
+
+<br/>
+
+### @BeforeEach로 더미데이터 세팅하기
+```java
+@BeforeEach
+public void setUp() {
+    dataSetting();
+}
+
+.../
+
+private void dataSetting() {
+    userRepository.save(newUser("ssar", "쌀"));
+}
+```
+UserControllerTest에서는 회원가입시 기존에 같은 username을 사용하고 있는 회원이 존재할 경우 예외가 발생되는 것을 검증해야 한다.
+따라서 미리 같은 username의 User 데이터를 생성시킬 필요가 있다. 
+UserRepository를 @Autowired로 주입해오고 @BeforeEach를 통해서 각 테스트코드가 실행되기 전마다 User데이터를 생성시켜줄 수 있다.
+
