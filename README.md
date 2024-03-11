@@ -152,3 +152,47 @@ public class UserServiceTest extends DummyObject {
 }
 ```
 테스트 클래스에서 상속해서 사용하면 번거롭게 Mock객체나 진짜 객체를 일일이 생성할 필요가 없어진다.
+
+<br/>
+
+### 유효성검사 AOP 적용
+```java
+@Component
+@Aspect
+public class CustomValidationAdvice {
+
+    // PointCut
+    @Pointcut("@annotation(org.springframework.web.bind.annotation.PostMapping)")
+    public void postMapping() {}
+
+    @Pointcut("@annotation(org.springframework.web.bind.annotation.PutMapping)")
+    public void putMapping() {}
+
+    // Advice
+    @Around("postMapping() || putMapping()")
+    public Object validationAdvice(ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
+        Object[] args = proceedingJoinPoint.getArgs();
+        for (Object arg : args) {
+            if (arg instanceof BindingResult) {
+                BindingResult bindingResult = (BindingResult) arg;
+
+                if (bindingResult.hasErrors()) {
+                    Map<String, String> errorMap = new HashMap<>();
+
+                    for (FieldError error : bindingResult.getFieldErrors()) {
+                        errorMap.put(error.getField(), error.getDefaultMessage());
+                    }
+                    throw new CustomValidationException("유효성검사 실패", errorMap);
+                }
+            }
+        }
+        return proceedingJoinPoint.proceed();
+    }
+}
+```
+- `@Aspect`: AOP를 적용하기 위해 어노테이션을 붙여준다.
+- `@Component`: 빈으로 등록한다.
+- `@PointCut("@annotation()")`: 어떤 어노테이션이 붙어있을 경우 실행될지 포인트컷을 지정한다.
+- `@Around`, `@Before`, `@After`: 타겟의 전후, 타겟이 실행되기 전, 타겟이 실행된 후로 지정할 수 있다. 위에서 지정한 어노테이션이 실행된 시점을 기준으로 한다.
+- `ProceedingJoinPoint`: @Around인 경우에만 조인포인트를 가져올 수 있다.
+- `proceedingJoinPoint.getArgs()`: 조인포인트에서 받아온 매개변수를 배열형태로 가져온다. 가져온 배열에 BindingResult가 있을경우에 유효성검사로직을 실행시킬 수 있게 된다.
