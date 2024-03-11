@@ -24,13 +24,13 @@ public class LoggingAspect {
     // joinPoint가 실행되기 이전에 실행될 어드바이스를 정의
     @Before("loggingPointcut()")
     public void logBefore(JoinPoint joinPoint) {
-        log.debug("Enter: {} with argument[s] = {}", joinPoint.getSignature().getName(), joinPoint.getArgs());
+        log.debug("실행전 메소드: {} with 매개변수: {}", joinPoint.getSignature().getName(), joinPoint.getArgs());
     }
 
     // joinPoint에서 성공적으로 반환된 후에 실행될 어드바이스를 정의
     @AfterReturning(pointcut = "loggingPointcut()", returning = "result")
     public void logAfterReturning(JoinPoint joinPoint, Object result) {
-        log.debug("Exit: {} with result = {}", joinPoint.getSignature().getName(), result);
+        log.debug("실행후 메소드: {} with 결과: {}", joinPoint.getSignature().getName(), result.toString());
     }
 
     // joinPoint에서 예외가 발생된 후에 실행될 어드바이스를 정의
