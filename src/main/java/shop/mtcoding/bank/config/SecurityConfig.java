@@ -62,10 +62,12 @@ public class SecurityConfig {
         // Exception 가로채기
         // 스프링시큐리티에서 예외가 발생하면 ExceptionTranslationFilter가 요청을 가로채서 응답을 한다.
         // 따라서 제어권을 가져와서 우리가 일관성있게 응답을 할 수 있도록 해야 한다.
+        // 인증 실패
         http.exceptionHandling().authenticationEntryPoint((request, response, authException) -> {
             CustomResponseUtil.fail(response, "로그인을 진행해주세요", HttpStatus.UNAUTHORIZED);
         });
 
+        // 권한 없음
         http.exceptionHandling().accessDeniedHandler((request, response, e) -> {
             CustomResponseUtil.fail(response, "권한이 없습니다", HttpStatus.FORBIDDEN);
         });
