@@ -201,20 +201,24 @@ public class CustomValidationAdvice {
 
 ### @BeforeEach로 더미데이터 세팅하기
 ```java
-@BeforeEach
-public void setUp() {
-    dataSetting();
-}
-
-.../
-
-private void dataSetting() {
-    userRepository.save(newUser("ssar", "쌀"));
+@Transactional
+public class UserServiceTest {
+    @BeforeEach
+    public void setUp() {
+        dataSetting();
+    }
+    
+    // ...
+    
+    private void dataSetting() {
+        userRepository.save(newUser("ssar", "쌀"));
+    }
 }
 ```
-UserControllerTest에서는 회원가입시 기존에 같은 username을 사용하고 있는 회원이 존재할 경우 예외가 발생되는 것을 검증해야 한다.
-따라서 미리 같은 username의 User 데이터를 생성시킬 필요가 있다. 
-UserRepository를 `@Autowired`로 주입해오고 `@BeforeEach`를 통해서 각 테스트코드가 실행되기 전마다 User데이터를 생성시켜줄 수 있다.
+UserControllerTest에서는 회원가입시 기존에 같은 username을 사용하고 있는 회원이 존재할 경우 예외가 발생되는 것을 검증해야 한다.  
+따라서 미리 같은 username의 User 데이터를 생성시킬 필요가 있다.  
+UserRepository를 `@Autowired`로 주입해오고 `@BeforeEach`를 통해서 각 테스트코드가 실행되기 전마다 User데이터를 생성시켜줄 수 있다.  
+단, 각 테스트 코드마다 실행되게 되면 같은 id값으로 데이터를 생성하게 될경우 예외가 발생하기 때문에 클래스 단위에 `@Transactional`을 붙여주면 테스트코드가 완료될때마다 데이터를 롤백시켜 중복을 방지해줄 수 있다.
 
 <br/>
 
@@ -228,7 +232,33 @@ JWT토큰을 사용한 **인증** 과정
 
 JWT토큰을 사용한 **인가** 과정
 1. 클라이언트가 `/api/s/**`경로로 자원 요청
-**2. BasicAuthenticationFilter**의 `doFilterInternal()`에서 요청헤더의 JWT 토큰을 검증
+2. **BasicAuthenticationFilter**의 `doFilterInternal()`에서 요청헤더의 JWT 토큰을 검증
 3. JWT 토큰 내용을 가지고 `Authentication`을 생성후 강제 로그인 (SecurityContextHolder에 세션 생성)
 4. `chain.doFilter()`로 체인 계속 진행
 5. 권한이 없을 경우 SecurityConfig에서 정의한 내용대로 예외처리 및 응답 (아직 컨트롤러로 가기 전이기 때문에 ControllerAdvice로 처리 불가)
+
+<br/>
+
+### Security 필터 등록
+```java
+public class CustomSecurityFilterManager extends AbstractHttpConfigurer<CustomSecurityFilterManager, HttpSecurity> {
+    @Override
+    public void configure(HttpSecurity builder) throws Exception {
+        AuthenticationManager authenticationManager = builder.getSharedObject(AuthenticationManager.class);
+        builder.addFilter(new JwtAuthenticationFilter(authenticationManager)); // 필터 추가
+        builder.addFilter(new JwtAuthorizationFilter(authenticationManager));  // 필터 추가
+        super.configure(builder);
+    }
+}
+
+// ...
+@Bean
+public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    // 생략..
+    http.apply(new CustomSecurityFilterManager());
+}
+```
+앞서 생성한 JWT 인증, 인가 필터를 Security에 등록하기 위해서는 `AbstractHttpConfigurer<>`를 상속한 클래스를 생성해야 한다.  
+해당 클래스에 각 필터에서 필요한 AuthenticationManager를 받아오고 필터를 생성 후 HttpSecurity객체에 필터를 추가해준다.  
+해당 클래스는 `filterChain()`에서 `apply()` 메소드를 사용해서 다시 등록해준다.
+

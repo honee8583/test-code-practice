@@ -2,7 +2,7 @@ server:
   port: 8081
   servlet:
     encoding:
-      charset: UTF-8
+      charset: utf-8
       force: true
 
 spring:
@@ -21,7 +21,7 @@ spring:
     properties:
       hibernate:
         '[hibernate.default_batch_fetch_size]': 100
-        '[hibernate.format_sql]': true
+        format_sql: true
     show-sql: true
   output:
     ansi:
@@ -30,3 +30,4 @@ spring:
 logging:
   level:
     '[shop.mtcoding.bank]': DEBUG
+    '[org.hibernate.type]': TRACE
