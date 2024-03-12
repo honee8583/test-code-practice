@@ -10,6 +10,14 @@ import shop.mtcoding.bank.domain.user.User;
 import shop.mtcoding.bank.domain.user.UserEnum;
 
 public class UserReqDto {
+
+    @Getter
+    @Setter
+    public static class LoginReqDto {   // validation 적용 불가(컨트롤러 전 단계이기 때문)
+        private String username;
+        private String password;
+    }
+
     @Getter
     @Setter
     public static class JoinReqDto {
