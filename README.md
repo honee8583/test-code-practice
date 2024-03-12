@@ -214,5 +214,21 @@ private void dataSetting() {
 ```
 UserControllerTest에서는 회원가입시 기존에 같은 username을 사용하고 있는 회원이 존재할 경우 예외가 발생되는 것을 검증해야 한다.
 따라서 미리 같은 username의 User 데이터를 생성시킬 필요가 있다. 
-UserRepository를 @Autowired로 주입해오고 @BeforeEach를 통해서 각 테스트코드가 실행되기 전마다 User데이터를 생성시켜줄 수 있다.
+UserRepository를 `@Autowired`로 주입해오고 `@BeforeEach`를 통해서 각 테스트코드가 실행되기 전마다 User데이터를 생성시켜줄 수 있다.
 
+<br/>
+
+### JWT 토큰을 사용한 인증&인가
+JWT토큰을 사용한 **인증** 과정
+1. 클라이언트가 `/api/login`경로로 로그인 요청
+2. UsernamePasswordAuthenticationFilter의 `attemptAuthentication()`에서 요청내용을 받음
+3. 요청내용으로 인증토큰을 생성 및 세션에 저장하고 리턴하면 UserDetailsService의 `LoadUserByUsername()`을 자동으로 수행
+4. 로그인이 성공하면 `successfulAuthentication()`을 수행하고 클라이언트에게 결과를 리턴 (리턴과 동시에 세션내용 삭제)
+5. 로그인에 실패하면 `unSuccessfulAuthentication()`을 수행하고 클라이언트에게 에러 결과를 리턴
+
+JWT토큰을 사용한 **인가** 과정
+1. 클라이언트가 `/api/s/**`경로로 자원 요청
+**2. BasicAuthenticationFilter**의 `doFilterInternal()`에서 요청헤더의 JWT 토큰을 검증
+3. JWT 토큰 내용을 가지고 `Authentication`을 생성후 강제 로그인 (SecurityContextHolder에 세션 생성)
+4. `chain.doFilter()`로 체인 계속 진행
+5. 권한이 없을 경우 SecurityConfig에서 정의한 내용대로 예외처리 및 응답 (아직 컨트롤러로 가기 전이기 때문에 ControllerAdvice로 처리 불가)
