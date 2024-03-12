@@ -16,8 +16,8 @@ private LocalDateTime updatedAt;
 <br/>
 
 ### 스프링 시큐리티 기본 설정
-스프링시큐리티는 기본적으로 로그인을 진행하지 않은 상태에서 인증이 필요한 API를 호출할경우 403에러를 반환한다.
-하지만 401에러가 더 맞는 상태코드이므로 401에러와 커스텀한 에러메시지를 반환하도록 설정한다. 
+스프링시큐리티는 기본적으로 로그인을 진행하지 않은 상태에서 인증이 필요한 API를 호출할경우 403에러(권한없음)를 반환한다.
+하지만 401에러(인증안됨)가 더 맞는 상태코드이므로 401에러와 커스텀한 에러메시지를 반환하도록 설정한다. 
 ```java
 @Bean
 public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -199,6 +199,15 @@ public class CustomValidationAdvice {
 
 <br/>
 
+### Mock환경에 진짜 객체 가져오기
+```java
+@Spy
+private ObjectMapper om;
+```
+@Spy 어노테이션을 사용해서 객체를 주입하면 Mock환경에 진짜 객체를 DI해오기 때문에 해당 객체의 기능을 사용할 수 있다.
+
+<br/>
+
 ### @BeforeEach로 더미데이터 세팅하기
 ```java
 @Transactional
@@ -234,8 +243,9 @@ JWT토큰을 사용한 **인가** 과정
 1. 클라이언트가 `/api/s/**`경로로 자원 요청
 2. **BasicAuthenticationFilter**의 `doFilterInternal()`에서 요청헤더의 JWT 토큰을 검증
 3. JWT 토큰 내용을 가지고 `Authentication`을 생성후 강제 로그인 (SecurityContextHolder에 세션 생성)
-4. `chain.doFilter()`로 체인 계속 진행
+4. JWT토큰이 헤더로 요청이 들어오든 안들어오든 `chain.doFilter()`로 체인 계속 진행
 5. 권한이 없을 경우 SecurityConfig에서 정의한 내용대로 예외처리 및 응답 (아직 컨트롤러로 가기 전이기 때문에 ControllerAdvice로 처리 불가)
+6. 토큰이 들어오지 않았을 경우 컨트롤러로 요청이 갈때 SecurityConfig에서 '인증안됨'에 해당되는 예외처리를 진행
 
 <br/>
 
@@ -261,4 +271,29 @@ public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 앞서 생성한 JWT 인증, 인가 필터를 Security에 등록하기 위해서는 `AbstractHttpConfigurer<>`를 상속한 클래스를 생성해야 한다.  
 해당 클래스에 각 필터에서 필요한 AuthenticationManager를 받아오고 필터를 생성 후 HttpSecurity객체에 필터를 추가해준다.  
 해당 클래스는 `filterChain()`에서 `apply()` 메소드를 사용해서 다시 등록해준다.
+
+<br/>
+
+### 인증이 필요한 테스트 코드 @WithUserDetails
+```java
+@BeforeEach
+public void setUp() {
+User user = userRepository.save(newUser("ssar", "쌀"));
+}
+
+// ...
+
+@WithUserDetails(value = "ssar", setupBefore = TestExecutionEvent.TEST_EXECUTION)
+@Test
+void saveAccount_test() throws Exception {
+    // ...
+}
+```
+인증이 필요한 url요청을 테스트 코드에서 해야 하는 경우 JWT 토큰이 필요로 한다고 생각할 수 있지만 구체적으로는 인증정보가 담긴 세션만 있으면 된다.  
+따라서 `@WithUserDetails` 어노테이션으로 value옵션으로 지정한 username으로 세션정보를 만들어낼 수 있다.  
+하지만 이 방식을 사용하려면 DB에 이에 해당하는 User정보가 이미 존재해야 한다. 이를 위해 `@BeforeEach`를 통해서 DB에 데이터를 집어넣는다 한들 예외가 발생한다.  
+setupBefore옵션을 지정해주지 않을 경우 기본적으로 `TEST_METHOD` 방식으로 실행되는데 이는 `@BeforeEach` 메소드가 실행되기 전에 세션을 만들려고 하므로 다시 DB에 데이터가 존재하지 않아 발생한다.  
+따라서 setupBefore옵션을 `TEST_EXECUTION`으로 지정해주면 해당 테스트 메소드가 실행되기 전에 실행되므로 무사히 세션정보를 생성해내고 요청을 성공할 수 있다.
+
+<br/>
 

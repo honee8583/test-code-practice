@@ -24,6 +24,7 @@ public class JwtAuthorizationFilter extends BasicAuthenticationFilter {
         super(authenticationManager);
     }
 
+    // JWT 토큰 헤더를 추가하지 않아도 해당 필터를 통과는 할 수 있지만, 시큐리티단에서 세션 값 검증에 실패한다.
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws IOException, ServletException {
