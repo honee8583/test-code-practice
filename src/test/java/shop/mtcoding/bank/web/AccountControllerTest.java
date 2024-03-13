@@ -1,7 +1,9 @@
 package shop.mtcoding.bank.web;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -19,6 +21,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.transaction.annotation.Transactional;
 import shop.mtcoding.bank.config.dummy.DummyObject;
+import shop.mtcoding.bank.domain.account.Account;
+import shop.mtcoding.bank.domain.account.AccountRepository;
 import shop.mtcoding.bank.domain.user.User;
 import shop.mtcoding.bank.domain.user.UserRepository;
 import shop.mtcoding.bank.dto.account.AccountReqDto.AccountSaveReqDto;
@@ -38,9 +42,14 @@ class AccountControllerTest extends DummyObject {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private AccountRepository accountRepository;
+
     @BeforeEach
     public void setUp() {
         User user = userRepository.save(newUser("ssar", "쌀"));
+        Account account1 = accountRepository.save(newMockAccount(1L, 1111L, 1000L, user));
+        Account account2 = accountRepository.save(newMockAccount(2L, 2222L, 1000L, user));
     }
 
     // 세션값만 만들어주면 된다.
@@ -65,5 +74,18 @@ class AccountControllerTest extends DummyObject {
 
         // then
         resultActions.andExpect(status().isCreated());
+    }
+
+    @WithUserDetails(value = "ssar", setupBefore = TestExecutionEvent.TEST_EXECUTION)
+    @Test
+    void findUserAccount_test() throws Exception {
+        // given
+        // when
+        ResultActions resultActions = mvc.perform(get("/api/s/account/login-user"));
+
+        // then
+        resultActions.andExpect(status().isOk());
+        resultActions.andExpect(jsonPath("$.data.fullname").value("쌀"));
+        resultActions.andExpect(jsonPath("$.data.accounts.size()").value(2));
     }
 }

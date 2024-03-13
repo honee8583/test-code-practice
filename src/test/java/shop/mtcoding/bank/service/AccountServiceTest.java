@@ -6,6 +6,8 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,6 +22,7 @@ import shop.mtcoding.bank.domain.user.User;
 import shop.mtcoding.bank.domain.user.UserRepository;
 import shop.mtcoding.bank.dto.account.AccountReqDto.AccountSaveReqDto;
 import shop.mtcoding.bank.dto.account.AccountRespDto.AccountSaveRespDto;
+import shop.mtcoding.bank.service.AccountService.AccountListRespDto;
 
 @ExtendWith(MockitoExtension.class)
 class AccountServiceTest extends DummyObject {
@@ -60,5 +63,28 @@ class AccountServiceTest extends DummyObject {
 
         // then
         assertThat(accountSaveRespDto.getNumber()).isEqualTo(1111L);
+    }
+
+    @Test
+    void 계좌목록보기_유저별_test() {
+        // given
+        Long userId = 1L;
+
+        // stub1
+        User user = newMockUser(userId, "ssar", "쌀");
+        when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
+
+        // stub2
+        List<Account> accounts = new ArrayList<>();
+        accounts.add(newMockAccount(1L, 1111L, 1000L, user));
+        accounts.add(newMockAccount(2L, 2222L, 1000L, user));
+        when(accountRepository.findByUser_id(anyLong())).thenReturn(accounts);
+
+        // when
+        AccountListRespDto accountListRespDto = accountService.계좌목록보기_유저별(userId);
+
+        // then
+        assertThat(accountListRespDto.getFullname()).isEqualTo("쌀");
+        assertThat(accountListRespDto.getAccounts().size()).isEqualTo(2);
     }
 }
