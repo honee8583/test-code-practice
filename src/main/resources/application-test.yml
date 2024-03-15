@@ -21,7 +21,7 @@ spring:
     properties:
       hibernate:
         '[hibernate.default_batch_fetch_size]': 100
-        '[hibernate.format_sql]': true
+        format_sql: true
     show-sql: true
   output:
     ansi:

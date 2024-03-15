@@ -17,6 +17,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import shop.mtcoding.bank.domain.user.User;
+import shop.mtcoding.bank.handler.ex.CustomApiException;
 
 @NoArgsConstructor
 @Getter
@@ -59,5 +60,13 @@ public class Account {
         this.user = user;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+    }
+
+    public void checkOwner(Long userId) {   // id를 조회할 때는 Lazy로딩이여도 select쿼리가 날라가지 않는다.
+//        String username = user.getUsername();
+//        System.out.println("테스트 : " + username);
+        if (user.getId() != userId) {
+            throw new CustomApiException("계좌 소유자가 아닙니다");
+        }
     }
 }

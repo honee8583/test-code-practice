@@ -297,3 +297,61 @@ setupBefore옵션을 지정해주지 않을 경우 기본적으로 `TEST_METHOD`
 
 <br/>
 
+### 테스트 코드 작성시 PersistenceContext 관리
+삭제로직을 구현하고 직접 포스트맨이나 http요청으로 테스트할 때는 삭제할 데이터가 이미 DB에 존재하기 때문에 문제가 존재하지 않는다.
+하지만 테스트할 때는 `@BeforeEach`로 테스트 로직이 동작하기 전에 데이터를 넣게 된다. 따라서 insert한 엔티티는 아직 PersistenceContext에 존재하는 상태이다.
+이러한 이유로 테스트 코드가 동작할 때는 Lazy 로딩으로 연관된 엔티티에 대한 정보를 불러올 때 PersistenceContext에서 엔티티를 꺼내 조회하기 때문에 쿼리문이 찍히지 않는다.
+개발할때의 테스트와 테스트 코드의 환경을 동일하게 맞춰주기 위해서는 PersistenceContext의 상태도 동일하게 맞춰줘야 한다. 따라서 `@BeforeEach`에서 데이터를 insert한 후에는 
+**EntityManager**를 사용해서 clear해 비워준다.
+```java
+@BeforeEach
+public void setUp() {
+    // 생략...
+
+    em.clear(); // 실제로는 PC에 내용이 없어야하기 때문에 환경을 맞춰줘야 한다.
+}
+```
+
+<br/>
+
+### @Transactional 대신 @Sql로 teardown 구문 실행하기
+`@Transactional`을 설정해서 각 테스트코드가 실행된 후 롤백을 시켜줄 수 있었지만, id값은 초기화되지 않는다. 
+즉 첫번째 테스트코드에서 `@BeforeEach`로 하나의 엔티티를 저장하면 id값은 1로 저장되고 
+두번째 테스트코드에서 데이터베이스의 내용이 롤백되고 `@BeforeEach`로 똑같이 하나의 엔티티를 저장하면 우리가 원한 id값 1이 아닌
+2가 저장된다.  
+<br/>
+
+이로인해 발생할 수 있는 문제점은 여러개의 테스트코드를 작성하게 되면 각 테스트 코드마다 똑같이 저장하게 되는 데이터의 id값도 점점 
+증가해 나중에는 얼마나 늘어난 id값을 일일이 기억해 코드를 짜야 한다. 즉 독립적이지 않은 테스트 코드를 작성해야 한다.  
+<br/>
+이를 해결하기 위한 sql문을 작성해 저장하고 테스트 클래스에서 `@Sql` 어노테이션으로 불러와서 `@BeforeEach`가 실행되기 전에 
+실행시키면 된다.  
+<br/>
+resources 폴더내에 db폴더를 생성하고 teardown.sql파일을 생성해 아래 코드를 작성하자.  
+<br/>
+
+```sql
+-- resources 폴더
+SET REFERENTIAL_INTEGRITY FALSE;
+truncate table transaction_tb;
+truncate table account_tb;
+truncate table user_tb;
+SET REFERENTIAL_INTEGRITY TRUE;
+```
+- `SET REFERENTIAL_INTEGRITY FALSE`: 걸려있는 제약 조건을 비활성화한다.
+- `truncate table {테이블명}`: 테이블을 DROP하는 것이 아닌 내용을 지워줌으로써 DROP후 다시 CREATE문을 실행해야하는 단점을 보완할 수 있다.
+- `SET REFERENTIAL_INTEGRITY TRUE`: 걸려있는 제약 조건을 다시 활성화한다.
+
+<br/>
+
+```java
+@Sql("classpath:db/teardown.sql")
+@SpringBootTest(webEnvironment = WebEnvironment.MOCK)
+class AccountControllerTest {
+    // ...
+}
+```
+`@Sql` 어노테이션을 사용해 classpath 즉 resources의 db폴더의 작성한 `teardown.sql`을 가져와서 `@BeforeEach`가 실행되기 전마다 실행
+시켜줌으로써 id필드를 초기화시켜줄 수 있다.
+컨트롤러 테스트와 같이 `@SpringBootTest`를 사용하는 곳(통합테스트)에서는 이를 적용시켜준는 것이 좋다.
+
