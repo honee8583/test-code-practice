@@ -58,9 +58,8 @@ public class Transaction {
 
     @Builder
     public Transaction(Long id, Account withdrawAccount, Account depositAccount, Long amount,
-                       Long withdrawAccountBalance,
-                       Long depositAccountBalance, TransactionEnum gubun, String sender, String receiver, String tel,
-                       LocalDateTime createdAt, LocalDateTime updatedAt) {
+                       Long withdrawAccountBalance, Long depositAccountBalance, TransactionEnum gubun, String sender,
+                       String receiver, String tel, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.withdrawAccount = withdrawAccount;
         this.depositAccount = depositAccount;

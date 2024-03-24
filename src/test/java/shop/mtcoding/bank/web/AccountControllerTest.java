@@ -28,6 +28,7 @@ import shop.mtcoding.bank.domain.account.Account;
 import shop.mtcoding.bank.domain.account.AccountRepository;
 import shop.mtcoding.bank.domain.user.User;
 import shop.mtcoding.bank.domain.user.UserRepository;
+import shop.mtcoding.bank.dto.account.AccountReqDto.AccountDepositReqDto;
 import shop.mtcoding.bank.dto.account.AccountReqDto.AccountSaveReqDto;
 import shop.mtcoding.bank.handler.ex.CustomApiException;
 
@@ -120,5 +121,28 @@ class AccountControllerTest extends DummyObject {
         // then
         // JUnit테스트에서 delete쿼리는 DB관련으로 가장 마지막에 실행되면 발동 안됨.
         assertThrows(CustomApiException.class, () -> accountRepository.findByNumber(number).orElseThrow(() -> new CustomApiException("계좌를 찾을 수 없습니다")));
+    }
+
+    @Test
+    void deposit_test() throws Exception {
+        // given
+        AccountDepositReqDto request = new AccountDepositReqDto();
+        request.setNumber(1111L);
+        request.setAmount(100L);
+        request.setGubun("DEPOSIT");
+        request.setTel("01011112222");
+
+        String requestBody = om.writeValueAsString(request);
+        System.out.println("테스트: " + requestBody);
+
+        // when
+        ResultActions resultActions = mvc.perform(post("/api/account/deposit")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestBody));
+        String responseBody = resultActions.andReturn().getResponse().getContentAsString();
+        System.out.println("테스트: " + responseBody);
+
+        // then
+        resultActions.andExpect(status().isCreated());
     }
 }

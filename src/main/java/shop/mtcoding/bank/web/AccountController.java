@@ -15,12 +15,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import shop.mtcoding.bank.config.auth.LoginUser;
 import shop.mtcoding.bank.dto.ResponseDto;
+import shop.mtcoding.bank.dto.account.AccountReqDto;
 import shop.mtcoding.bank.dto.account.AccountReqDto.AccountSaveReqDto;
+import shop.mtcoding.bank.dto.account.AccountRespDto.AccountDepositRespDto;
 import shop.mtcoding.bank.dto.account.AccountRespDto.AccountListRespDto;
 import shop.mtcoding.bank.dto.account.AccountRespDto.AccountSaveRespDto;
 import shop.mtcoding.bank.service.AccountService;
-import shop.mtcoding.bank.service.AccountService.AccountDepositReqDto;
-import shop.mtcoding.bank.service.AccountService.AccountDepositRespDto;
 
 @RequiredArgsConstructor
 @RequestMapping("/api")
@@ -48,7 +48,7 @@ public class AccountController {
     }
 
     @PostMapping("/account/deposit")
-    public ResponseEntity<?> depositAccount(@RequestBody @Valid AccountDepositReqDto accountDepositReqDto, BindingResult bindingResult) {
+    public ResponseEntity<?> depositAccount(@RequestBody @Valid AccountReqDto.AccountDepositReqDto accountDepositReqDto, BindingResult bindingResult) {
         AccountDepositRespDto accountDepositRespDto = accountService.계좌입금(accountDepositReqDto);
         return new ResponseEntity<>(new ResponseDto<>(1, "계좌입금 성공", accountDepositRespDto), HttpStatus.OK);
     }
