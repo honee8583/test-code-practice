@@ -13,6 +13,25 @@ public class AccountReqDto {
 
     @Getter
     @Setter
+    public static class AccountWithdrawReqDto {
+        @NotNull
+        @Digits(integer = 4, fraction = 4)
+        private Long number;
+
+        @NotNull
+        @Digits(integer = 4, fraction = 4)
+        private Long password;
+
+        @NotNull
+        private Long amount;
+
+        @NotEmpty
+        @Pattern(regexp = "^(WITHDRAW)$")
+        private String gubun;
+    }
+
+    @Getter
+    @Setter
     public static class AccountDepositReqDto {
         @NotNull
         @Digits(integer = 4, fraction = 4)

@@ -1,5 +1,7 @@
 package shop.mtcoding.bank.web;
 
+import static shop.mtcoding.bank.dto.account.AccountReqDto.*;
+
 import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -20,8 +22,8 @@ import shop.mtcoding.bank.dto.account.AccountReqDto.AccountSaveReqDto;
 import shop.mtcoding.bank.dto.account.AccountRespDto.AccountDepositRespDto;
 import shop.mtcoding.bank.dto.account.AccountRespDto.AccountListRespDto;
 import shop.mtcoding.bank.dto.account.AccountRespDto.AccountSaveRespDto;
+import shop.mtcoding.bank.dto.account.AccountRespDto.AccountWithdrawRespDto;
 import shop.mtcoding.bank.service.AccountService;
-import shop.mtcoding.bank.service.AccountService.AccountWithdrawRespDto;
 
 @RequiredArgsConstructor
 @RequestMapping("/api")
@@ -49,14 +51,14 @@ public class AccountController {
     }
 
     @PostMapping("/account/deposit")
-    public ResponseEntity<?> depositAccount(@RequestBody @Valid AccountReqDto.AccountDepositReqDto accountDepositReqDto, BindingResult bindingResult) {
+    public ResponseEntity<?> depositAccount(@RequestBody @Valid AccountDepositReqDto accountDepositReqDto, BindingResult bindingResult) {
         AccountDepositRespDto accountDepositRespDto = accountService.계좌입금(accountDepositReqDto);
         return new ResponseEntity<>(new ResponseDto<>(1, "계좌입금 성공", accountDepositRespDto), HttpStatus.OK);
     }
 
     // @Valid뒤에 BindingResult가 바로 들어와야 한다.
     @PostMapping("/s/account/withdraw")
-    public ResponseEntity<?> withdrawAccount(@RequestBody @Valid AccountService.AccountWithdrawReqDto accountWithdrawReqDto,
+    public ResponseEntity<?> withdrawAccount(@RequestBody @Valid AccountWithdrawReqDto accountWithdrawReqDto,
                                              BindingResult bindingResult,
                                              @AuthenticationPrincipal LoginUser loginUser) {
         AccountWithdrawRespDto accountWithdrawRespDto = accountService.계좌출금(accountWithdrawReqDto, loginUser.getUser().getId());

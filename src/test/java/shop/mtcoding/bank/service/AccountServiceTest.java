@@ -29,7 +29,6 @@ import shop.mtcoding.bank.dto.account.AccountRespDto.AccountDepositRespDto;
 import shop.mtcoding.bank.dto.account.AccountRespDto.AccountListRespDto;
 import shop.mtcoding.bank.dto.account.AccountRespDto.AccountSaveRespDto;
 import shop.mtcoding.bank.handler.ex.CustomApiException;
-import shop.mtcoding.bank.service.AccountService.AccountWithdrawReqDto;
 
 @ExtendWith(MockitoExtension.class)
 class AccountServiceTest extends DummyObject {
