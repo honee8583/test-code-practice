@@ -88,6 +88,8 @@ public class SecurityConfig {
         configuration.addAllowedOriginPattern("*"); // 모든 IP 주소 혀용 (프론트엔드 IP만 허용)
         configuration.setAllowCredentials(true);    // 클라이언트 쪽에서 쿠키요청 허용
 
+        configuration.addExposedHeader("Authorization");    // 설정을 해주지 않을 경우 프스트맨과 같은 경우에는 응답값을 확인할 수 있지만, 브라우저에서는 노출을 시켜주지 않기 때문에 expose를 해줘야 브라우저에서 헤더값을 JS로 당겨올 수 있다.(이전에는 default값이었지만 현재는 아니므로 설정해줘야 한다.)
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration); // 모든 주소에서 위의 설정 적용
 

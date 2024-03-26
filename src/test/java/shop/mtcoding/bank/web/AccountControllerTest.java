@@ -29,6 +29,7 @@ import shop.mtcoding.bank.domain.user.User;
 import shop.mtcoding.bank.domain.user.UserRepository;
 import shop.mtcoding.bank.dto.account.AccountReqDto.AccountDepositReqDto;
 import shop.mtcoding.bank.dto.account.AccountReqDto.AccountSaveReqDto;
+import shop.mtcoding.bank.dto.account.AccountReqDto.AccountTransferReqDto;
 import shop.mtcoding.bank.dto.account.AccountReqDto.AccountWithdrawReqDto;
 import shop.mtcoding.bank.handler.ex.CustomApiException;
 
@@ -143,12 +144,12 @@ class AccountControllerTest extends DummyObject {
         System.out.println("테스트: " + responseBody);
 
         // then
-        resultActions.andExpect(status().isOk());
+        resultActions.andExpect(status().isCreated());
     }
 
     @WithUserDetails(value = "ssar", setupBefore = TestExecutionEvent.TEST_EXECUTION)
     @Test
-    void withdrawACcount_test() throws Exception {
+    void withdrawAccount_test() throws Exception {
         // given
         AccountWithdrawReqDto accountWithdrawReqDto = new AccountWithdrawReqDto();
         accountWithdrawReqDto.setNumber(1111L);
@@ -160,11 +161,38 @@ class AccountControllerTest extends DummyObject {
         System.out.println("테스트: " + requestBody);
 
         // when
-        // then
-        ResultActions resultActions = mvc.perform(get("/api/s/account/withdraw")
+        ResultActions resultActions = mvc.perform(post("/api/s/account/withdraw")
                 .content(requestBody)
                 .contentType(MediaType.APPLICATION_JSON));
         String responseBody = resultActions.andReturn().getResponse().getContentAsString();
         System.out.println("테스트: " + responseBody);
+
+        // then
+        resultActions.andExpect(status().isCreated());
+    }
+
+    @WithUserDetails(value = "ssar", setupBefore = TestExecutionEvent.TEST_EXECUTION)
+    @Test
+    void transferAccount_test() throws Exception {
+        // given
+        AccountTransferReqDto accountTransferReqDto = new AccountTransferReqDto();
+        accountTransferReqDto.setWithdrawNumber(1111L); // 출금계좌
+        accountTransferReqDto.setWithdrawPassword(1234L);
+        accountTransferReqDto.setDepositNumber(2222L);  // 입금계좌
+        accountTransferReqDto.setGubun("TRANSFER");
+        accountTransferReqDto.setAmount(100L);
+
+        String requestBody = om.writeValueAsString(accountTransferReqDto);
+        System.out.println("테스트: " + requestBody);
+
+        // when
+        ResultActions resultActions = mvc.perform(post("/api/s/account/transfer")
+                .content(requestBody)
+                .contentType(MediaType.APPLICATION_JSON));
+        String responseBody = resultActions.andReturn().getResponse().getContentAsString();
+        System.out.println("테스트: " + responseBody);
+
+        // then
+        resultActions.andExpect(status().isCreated());
     }
 }

@@ -15,6 +15,45 @@ public class AccountRespDto {
 
     @Getter
     @Setter
+    public static class AccountTransferRespDto {
+        private Long id;    // 계좌ID
+        private Long number;    // 계좌번호
+        private Long balance;   // 출금계좌잔액
+        private TransactionDto transaction;
+
+        public AccountTransferRespDto(Account account, Transaction transaction) {
+            this.id = account.getId();
+            this.number = account.getNumber();
+            this.balance = account.getBalance();
+            this.transaction = new TransactionDto(transaction);
+        }
+
+        @Getter
+        @Setter
+        public class TransactionDto {
+            private Long id;
+            private String gubun;
+            private String sender;
+            private String receiver;
+            private Long amount;
+            @JsonIgnore
+            private Long depositAccountBalance;
+            private String createdAt;
+
+            public TransactionDto(Transaction transaction) {
+                this.id = transaction.getId();
+                this.gubun = transaction.getGubun().getValue();
+                this.sender = transaction.getSender();
+                this.receiver = transaction.getReceiver();
+                this.amount = transaction.getAmount();
+                this.depositAccountBalance = transaction.getDepositAccountBalance();
+                this.createdAt = CustomDateUtil.toStringFormat(transaction.getCreatedAt());
+            }
+        }
+    }
+
+    @Getter
+    @Setter
     public static class AccountWithdrawRespDto {
         private Long id;    // 계좌ID
         private Long number;    // 계좌번호
